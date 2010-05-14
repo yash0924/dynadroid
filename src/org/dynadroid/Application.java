@@ -11,6 +11,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.ViewFlipper;
 import org.dynadroid.utils.Debug;
 import org.dynadroid.utils.Inflector;
+import org.dynadroid.utils.StringUtils;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -24,6 +25,8 @@ public class Application {
     static DynaDroidActivity activity;
     public static View applicationView;
     protected static ProgressDialog busyDialog;
+    static List<String> trackedScreensMap;
+    static List<Integer> trackedScreens;
 
     public synchronized static void init(DynaDroidActivity dorindaActivity) {
         screens = new ArrayList();
@@ -32,6 +35,8 @@ public class Application {
         viewFlipper = (ViewFlipper) activity.findViewById(R.id.flipper);
         Debug.println("******viewF=" + viewFlipper);
         applicationView = activity.findViewById(R.id.application);
+        trackedScreensMap = new ArrayList();
+        trackedScreens = new ArrayList();
     }
 
     public synchronized static int screenCount() {
@@ -74,9 +79,27 @@ public class Application {
             viewFlipper.showNext();
             Debug.println("***pushing screen " + screen);
             screens.add(screen);
+            trackScreen(screen);
         } catch (IllegalStateException e) {
             Debug.println("*****IllegalStateException cancelling pushScreen");
         }
+    }
+
+    public synchronized static void trackScreen(Screen screen) {
+        String trackingName = screen.trackingName();
+        int key = trackedScreensMap.indexOf(trackingName);
+        if (key == -1) {
+            trackedScreensMap.add(trackingName);
+            key = trackedScreensMap.size() - 1;
+        }
+        trackedScreens.add(key);
+    }
+
+    synchronized static String pullScreenAnalytics() {
+        String analytics = "screens="+ StringUtils.join(trackedScreens,",") + "&map=" + StringUtils.join(trackedScreensMap, ",");
+        trackedScreens = new ArrayList();
+        trackedScreensMap = new ArrayList();
+        return analytics;
     }
 
     public synchronized static void popTopScreen(boolean animate, boolean wait) {
