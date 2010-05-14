@@ -24,6 +24,10 @@ public abstract class Screen {
         this.view = view;
     }
 
+    public String trackingName() {
+        return this.getClass().getSimpleName();
+    }
+
     public boolean startCalled() {
         return startCalled;
     }

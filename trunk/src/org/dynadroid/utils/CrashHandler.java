@@ -5,12 +5,13 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Environment;
 import android.os.StatFs;
+import org.dynadroid.DynaDroidActivity;
 
 import java.io.*;
 import java.util.Date;
 import java.util.Random;
 
-public abstract class ErrorReporter implements Thread.UncaughtExceptionHandler {
+public class CrashHandler implements Thread.UncaughtExceptionHandler {
     String versionName;
     String packageName;
     String filePath;
@@ -31,10 +32,10 @@ public abstract class ErrorReporter implements Thread.UncaughtExceptionHandler {
     String user;
 
     private Thread.UncaughtExceptionHandler previousHandler;
-    private Context context;
+    private DynaDroidActivity dynaDroidActivity;
 
-    protected ErrorReporter(Context context) {
-        this.context = context;
+    public CrashHandler(DynaDroidActivity dynaDroidActivity) {
+        this.dynaDroidActivity = dynaDroidActivity;
         previousHandler = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler(this);
         loadDeviceInfo();
@@ -57,16 +58,16 @@ public abstract class ErrorReporter implements Thread.UncaughtExceptionHandler {
     }
 
     void loadDeviceInfo() {
-        PackageManager pm = context.getPackageManager();
+        PackageManager pm = dynaDroidActivity.getPackageManager();
         try {
             PackageInfo pi;
             // Version
-            pi = pm.getPackageInfo(context.getPackageName(), 0);
+            pi = pm.getPackageInfo(dynaDroidActivity.getPackageName(), 0);
             versionName = pi.versionName;
             // Package name
             packageName = pi.packageName;
             // Files dir for storing the stack traces
-            filePath = context.getFilesDir().getAbsolutePath();
+            filePath = dynaDroidActivity.getFilesDir().getAbsolutePath();
             // Device model
             phoneModel = android.os.Build.MODEL;
             // Android version
@@ -149,15 +150,13 @@ public abstract class ErrorReporter implements Thread.UncaughtExceptionHandler {
         previousHandler.uncaughtException(t, e);
     }
 
-    public abstract void onSendErrorReport(String errorReport);
-
-    private void save(String errorReport) {
+    private void save(String crashReport) {
         try {
             Random generator = new Random();
             int random = generator.nextInt(99999);
             String FileName = "stack-" + random + ".stacktrace";
-            FileOutputStream trace = context.openFileOutput(FileName, Context.MODE_PRIVATE);
-            trace.write(errorReport.getBytes());
+            FileOutputStream trace = dynaDroidActivity.openFileOutput(FileName, Context.MODE_PRIVATE);
+            trace.write(crashReport.getBytes());
             trace.close();
         }
         catch (IOException ioe) {
@@ -166,9 +165,7 @@ public abstract class ErrorReporter implements Thread.UncaughtExceptionHandler {
 
     private String[] getErrorFileList() {
         File dir = new File(filePath + "/");
-        // Try to create the files folder if it doesn't exist
         dir.mkdir();
-        // Filter for ".stacktrace" files
         FilenameFilter filter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
                 return name.endsWith(".stacktrace");
@@ -177,40 +174,38 @@ public abstract class ErrorReporter implements Thread.UncaughtExceptionHandler {
         return dir.list(filter);
     }
 
-    public boolean hasErrorReport() {
+    public boolean hasCrashReport() {
         return getErrorFileList().length > 0;
     }
 
-    public void sendErrorReport() {
+    public String getCrashReport() {
         try {
-            if (hasErrorReport()) {
-                StringBuffer errorReport = new StringBuffer();
+            if (hasCrashReport()) {
+                StringBuffer crashReport = new StringBuffer();
                 String[] ErrorFileList = getErrorFileList();
                 int curIndex = 0;
-// We limit the number of crash reports to send ( in order not to be too slow )
                 final int maxSend = 5;
                 for (String curString : ErrorFileList) {
                     if (curIndex++ <= maxSend) {
-                        errorReport.append("New Trace collected :\n");
-                        errorReport.append("=====================\n ");
+                        crashReport.append("New Trace collected :\n");
+                        crashReport.append("=====================\n ");
                         String filePath = this.filePath + "/" + curString;
                         BufferedReader input = new BufferedReader(new FileReader(filePath));
                         String line;
                         while ((line = input.readLine()) != null) {
-                            errorReport.append(line + "\n");
+                            crashReport.append(line + "\n");
                         }
                         input.close();
                     }
-
-// DELETE FILES !!!!
                     File curFile = new File(filePath + "/" + curString);
                     curFile.delete();
                 }
-                onSendErrorReport(errorReport.toString());
+                return crashReport.toString();
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return "";
     }
 }
 

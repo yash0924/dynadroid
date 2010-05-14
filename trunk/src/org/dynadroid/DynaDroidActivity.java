@@ -9,7 +9,7 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.*;
-import org.dynadroid.utils.ErrorReporter;
+import org.dynadroid.utils.CrashHandler;
 import org.dynadroid.utils.Inflector;
 import org.dynadroid.utils.Debug;
 
@@ -18,15 +18,27 @@ import java.lang.reflect.Field;
 
 public abstract class DynaDroidActivity extends Activity {
     int currentOrientation = -1;
-    ErrorReporter errorReporter;
+    CrashHandler crashHandler;
 
-    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.application);
         showTitle(true);
         enableCustomOrientationHandling(false);
+        crashHandler = new CrashHandler(this);
         Application.init(this);
+    }
+
+    protected void onStart() {
+        super.onStart();
+        if (crashHandler.hasCrashReport()) {
+            sendCrashReport(crashHandler.getCrashReport());
+        }
+    }
+
+    protected void onPause() {
+        super.onPause();
+        sendAnalytics(Application.pullScreenAnalytics());
     }
 
     protected void enableCustomOrientationHandling(boolean enable) {
@@ -52,8 +64,14 @@ public abstract class DynaDroidActivity extends Activity {
         }
     }
 
-    protected void setErrorReporter(ErrorReporter errorReporter) {
-        this.errorReporter = errorReporter;
+    protected void sendCrashReport(String crashReport) {
+        Debug.println("****send crash report = " + crashReport);
+        //subclasses override this for sending crash report
+    }
+
+    protected void sendAnalytics(String data) {
+        Debug.println("****send analytics data = " + data);
+        //subclasses override this for sending analytics
     }
 
     protected void showTitle(boolean show) {
