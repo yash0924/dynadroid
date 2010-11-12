@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.animation.AnimationUtils;
 import android.widget.ViewFlipper;
+import org.dynadroid.samples.helloworld.R;
 import org.dynadroid.utils.Debug;
 import org.dynadroid.utils.Inflector;
 import org.dynadroid.utils.StringUtils;
@@ -28,10 +29,10 @@ public class Application {
     static List<String> trackedScreensMap;
     static List<Integer> trackedScreens;
 
-    public synchronized static void init(DynaDroidActivity dorindaActivity) {
+    public synchronized static void init(DynaDroidActivity dynaDroidActivity) {
         screens = new ArrayList();
-        activity = dorindaActivity;
-        Screen.setActivity(dorindaActivity);
+        activity = dynaDroidActivity;
+        Screen.setActivity(dynaDroidActivity);
         viewFlipper = (ViewFlipper) activity.findViewById(R.id.flipper);
         Debug.println("******viewF=" + viewFlipper);
         applicationView = activity.findViewById(R.id.application);
