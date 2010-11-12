@@ -2,7 +2,6 @@ package org.dynadroid.samples.helloworld;
 
 import android.view.MenuItem;
 import android.view.View;
-import org.dynadroid.R;
 import org.dynadroid.Screen;
 
 public class HelloWorldScreen extends Screen {

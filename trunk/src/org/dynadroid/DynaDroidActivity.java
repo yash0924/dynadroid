@@ -9,6 +9,7 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.*;
+import org.dynadroid.samples.helloworld.R;
 import org.dynadroid.utils.CrashHandler;
 import org.dynadroid.utils.Inflector;
 import org.dynadroid.utils.Debug;
