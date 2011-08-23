@@ -91,6 +91,11 @@ public abstract class Screen {
         return this;
     }
 
+    public Screen push(boolean animate) {
+        Application.pushScreen(this, animate, false);
+        return this;
+    }
+
     public Screen swapAndWait() {
         Application.swapScreen(this, true);
         return this;
@@ -121,7 +126,7 @@ public abstract class Screen {
         return Application.getTopScreen() == this;
     }
 
-    protected View findViewById(int id) {
+    public View findViewById(int id) {
         return view.findViewById(id);
     }
 

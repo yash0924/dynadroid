@@ -4,6 +4,8 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,7 +25,7 @@ public class Application {
 
     protected static ViewFlipper viewFlipper;
     static List<Screen> screens;
-    static DynaDroidActivity activity;
+    public static DynaDroidActivity activity;
     public static View applicationView;
     protected static ProgressDialog busyDialog;
     static List<String> trackedScreensMap;
@@ -179,15 +181,19 @@ public class Application {
     }
 
     public static void showMessage(String title, final String message) {
-        String button1String = "OK";
-        AlertDialog.Builder ad = new AlertDialog.Builder(activity);
-        ad.setTitle(title);
-        ad.setMessage(message);
-        ad.setPositiveButton(button1String, new DialogInterface.OnClickListener() {
+        showMessage(title, message, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int arg1) {
                 dialog.dismiss();
             }
         });
+    }
+
+    public static void showMessage(String title, final String message, DialogInterface.OnClickListener onclick) {
+        String button1String = "OK";
+        AlertDialog.Builder ad = new AlertDialog.Builder(activity);
+        ad.setTitle(title);
+        ad.setMessage(message);
+        ad.setPositiveButton(button1String, onclick);
         ad.show();
     }
 
@@ -267,5 +273,14 @@ public class Application {
     public static boolean isMetric() {
         String countryCode = Locale.getDefault().getCountry();
         return !("US".equalsIgnoreCase(countryCode) || "LR".equalsIgnoreCase(countryCode) || "MM".equalsIgnoreCase(countryCode));
+    }
+
+    public static boolean isOnline() {
+        ConnectivityManager cm = (ConnectivityManager) activity.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+        if (netInfo != null && netInfo.isConnectedOrConnecting()) {
+            return true;
+        }
+        return false;
     }
 }
