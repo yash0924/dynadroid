@@ -1,5 +1,7 @@
 package org.dynadroid.utils;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.List;
 
 /**
@@ -22,5 +24,14 @@ public class StringUtils {
         }
 
         return joinedString.delete(joinedString.length() - delimiter.length(), joinedString.length()).toString();
+    }
+
+    public static String urlEncode(String string) {
+        try {
+            return URLEncoder.encode(string, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return string;
     }
 }
