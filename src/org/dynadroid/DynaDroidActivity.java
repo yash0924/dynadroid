@@ -14,6 +14,7 @@ import org.dynadroid.samples.helloworld.R;
 import org.dynadroid.utils.CrashHandler;
 import org.dynadroid.utils.Inflector;
 import org.dynadroid.utils.Debug;
+import org.dynadroid.utils.UrlCache;
 
 import java.lang.reflect.Field;
 
@@ -23,6 +24,7 @@ public abstract class DynaDroidActivity extends Activity {
     CrashHandler crashHandler;
 
     public void onCreate(Bundle savedInstanceState) {
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.application);
         showTitle(true);
@@ -40,7 +42,13 @@ public abstract class DynaDroidActivity extends Activity {
 
     protected void onPause() {
         super.onPause();
+        UrlCache.save();
         sendAnalytics(Application.pullScreenAnalytics());
+    }
+
+    protected void onResume() {
+        super.onResume();
+        UrlCache.load();
     }
 
     protected void enableCustomOrientationHandling(boolean enable) {

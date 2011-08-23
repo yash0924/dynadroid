@@ -4,8 +4,10 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -282,5 +284,11 @@ public class Application {
             return true;
         }
         return false;
+    }
+
+    public static void openUrl(String url) {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(Uri.parse(url));
+        Application.activity.startActivity(intent);
     }
 }
