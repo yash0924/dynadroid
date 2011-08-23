@@ -1,7 +1,5 @@
 package org.dynadroid.utils;
 
-import java.util.Locale;
-
 public class Debug {
     public static boolean debug = true;
 

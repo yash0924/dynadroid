@@ -5,6 +5,7 @@ import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -165,26 +166,19 @@ public abstract class DynaDroidActivity extends Activity {
         return super.onKeyDown(keyCode, event);
     }
 
-    protected void onDestroy() {
-        super.onDestroy();
-        Debug.println("***************** Activity onDestroy killing process");
-        //android.os.Process.killProcess(android.os.Process.myPid());
-        kill();
-    }
-
     protected void kill() {
         ((ActivityManager) getSystemService(ACTIVITY_SERVICE)).restartPackage(getPackageName());
     }
 
     public void onBackPressed() {
         if (Application.screenCount() == 1) {
-            showExitDialog();
+            finish();
         } else {
             Application.popTopScreen();
         }
     }
 
-    private void showExitDialog() {
+    protected void showExitDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage("Are you sure you want to exit?");
         builder.setCancelable(true);
@@ -205,5 +199,14 @@ public abstract class DynaDroidActivity extends Activity {
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+    }
+
+    public int versionCode() {
+        try {
+            return getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        return -1;
     }
 }
