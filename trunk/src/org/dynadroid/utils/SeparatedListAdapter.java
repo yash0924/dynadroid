@@ -1,4 +1,4 @@
-package com.starterstep.utils;
+package org.dynadroid.utils;
 
 import android.content.Context;
 import android.view.View;
@@ -6,7 +6,7 @@ import android.view.ViewGroup;
 import android.widget.Adapter;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
-import org.dynadroid.samples.helloworld.R;
+import org.dynadroid.Application;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -18,7 +18,7 @@ public class SeparatedListAdapter extends BaseAdapter {
 	public final static int TYPE_SECTION_HEADER = 0;
 
 	public SeparatedListAdapter(Context context) {
-		headers = new ArrayAdapter<String>(context, R.layout.list_header);
+		headers = new ArrayAdapter<String>(context, Application.getResourceIdByName("layout","list_header"));
 	}
 
 	public void addSection(String section, Adapter adapter) {
