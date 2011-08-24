@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              style="@style/vertical_fill">
+
+    <TextView android:text="Hello Pushed Screen"
+              android:textColor="#ffffff"
+              style="@style/base_wrap"
+              android:layout_gravity="center"
+              android:gravity="center"/>
+
+    <Button android:text="Push Screen"
+            android:id="@+id/push"
+            style="@style/base_fill_wrap"/>
+
+    <Button android:text="Pop Screen"
+            android:id="@+id/pop"
+            style="@style/base_fill_wrap"/>
+
+</LinearLayout>
