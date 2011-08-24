@@ -168,11 +168,7 @@ public abstract class DynaDroidActivity extends Activity {
     }
 
     public void onBackPressed() {
-        if (Application.screenCount() == 1) {
-            finish();
-        } else {
-            Application.popTopScreen();
-        }
+        Application.onBackPressed();
     }
 
     protected void showExitDialog() {
