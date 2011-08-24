@@ -24,169 +24,35 @@ import java.util.Locale;
 
 public class Application {
 
-    protected static ViewFlipper viewFlipper;
-    static List<Screen> screens;
     public static DynaDroidActivity activity;
     public static View applicationView;
     protected static ProgressDialog busyDialog;
-    static List<String> trackedScreensMap;
-    static List<Integer> trackedScreens;
+    protected static List<Navigation> navigationList;
+    private static Navigation topNavigation;
     
-    static int layout_application, id_flipper, id_application, anim_push_left_out, anim_push_left_in, anim_push_right_out, anim_push_right_in, anim_fade_out, anim_fade_in, style_busy;
+    static int layout_application, id_application, style_busy;
 
     public synchronized static void init(DynaDroidActivity dynaDroidActivity) {
         activity = dynaDroidActivity;
         layout_application = getResourceIdByName("layout","application");
-        id_flipper = getResourceIdByName("id","flipper");
         id_application = getResourceIdByName("id","application");
-        anim_push_left_out = getResourceIdByName("anim","push_left_out");
-        anim_push_left_in = getResourceIdByName("anim","push_left_in");
-        anim_push_right_out = getResourceIdByName("anim","push_right_out");
-        anim_push_right_in = getResourceIdByName("anim","push_right_in");
-        anim_fade_out = getResourceIdByName("anim","fade_out");
-        anim_fade_in = getResourceIdByName("anim","fade_in");
         style_busy = getResourceIdByName("style","busy");
         dynaDroidActivity.setContentView(layout_application);
-        screens = new ArrayList();
         Screen.setActivity(dynaDroidActivity);
-        viewFlipper = (ViewFlipper) activity.findViewById(id_flipper);
-        Debug.println("******viewF=" + viewFlipper);
         applicationView = activity.findViewById(id_application);
-        trackedScreensMap = new ArrayList();
-        trackedScreens = new ArrayList();
     }
 
-    public synchronized static int screenCount() {
-        return screens.size();
+    static void addNavigation(Navigation nav) {
+        navigationList.add(nav);
+        topNavigation = nav;
     }
 
-    public synchronized static void swapScreen(Screen screen, boolean wait) {
-        pushScreen(screen, false, wait);
-        popScreenBelow(screen);
+    static void markAsNavigationWithTopScreen(Navigation nav) {
+        topNavigation = nav;
     }
 
-    public synchronized static void pushScreen(Screen screen, boolean wait) {
-        pushScreen(screen, true, wait);
-    }
-
-    public synchronized static void pushScreen(Screen screen, boolean animate, boolean wait) {
-        try {
-            if (screens.contains(screen)) {
-                Debug.println("*****cancelling pushScreen, screen already on stack");
-                return;
-            }
-            if (!screen.startCalled()) {
-                screen.start();
-                if (screen.onForcePortraitOrientation()) {
-                    activity.setOrientationToPortrait();
-                }
-            }
-            viewFlipper.addView(screen.getView(), screens.size());
-            if (animate) {
-                viewFlipper.setOutAnimation(AnimationUtils.loadAnimation(activity, anim_push_left_out));
-                viewFlipper.setInAnimation(AnimationUtils.loadAnimation(activity, anim_push_left_in));
-            } else {
-                Debug.println("no animation");
-                viewFlipper.setOutAnimation(AnimationUtils.loadAnimation(activity, anim_fade_out));
-                viewFlipper.setInAnimation(AnimationUtils.loadAnimation(activity, anim_fade_in));
-            }
-            if (!wait) {
-                screen.update();
-            }
-            viewFlipper.showNext();
-            Debug.println("***pushing screen " + screen);
-            screens.add(screen);
-            trackScreen(screen);
-        } catch (IllegalStateException e) {
-            Debug.println("*****IllegalStateException cancelling pushScreen");
-        }
-    }
-
-    public synchronized static void trackScreen(Screen screen) {
-        String trackingName = screen.trackingName();
-        int key = trackedScreensMap.indexOf(trackingName);
-        if (key == -1) {
-            trackedScreensMap.add(trackingName);
-            key = trackedScreensMap.size() - 1;
-        }
-        trackedScreens.add(key);
-    }
-
-    synchronized static String pullScreenAnalytics() {
-        String analytics = "screens=" + StringUtils.join(trackedScreens, ",") + "&map=" + StringUtils.join(trackedScreensMap, ",");
-        trackedScreens = new ArrayList();
-        trackedScreensMap = new ArrayList();
-        return analytics;
-    }
-
-    public synchronized static void popTopScreen(boolean animate, boolean wait) {
-        if (screens.size() <= 1) {
-            return;
-        }
-        popScreen(screens.get(screens.size() - 1), animate, wait);
-    }
-
-    public synchronized static void popScreenBelow(Screen screen) {
-        if (screens.size() <= 1) {
-            return;
-        }
-        popScreen(screens.get(screens.indexOf(screen) - 1), false, false);
-    }
-
-    public synchronized static void popScreenAndAllAbove(Screen screen) {
-        int index = screens.indexOf(screen);
-        while (screens.size() > index) {
-            popScreen(screens.get(index), false, index + 1 != screens.size());
-        }
-    }
-
-    public synchronized static void popAllAbove(Screen screen) {
-        int index = screens.indexOf(screen) + 1;
-        while (screens.size() > index) {
-            popScreen(screens.get(index), false, index + 1 != screens.size());
-        }
-    }
-
-    synchronized static void popScreen(Screen screen, boolean animate, boolean wait) {
-        int indexOfScreen = screens.indexOf(screen);
-        if (indexOfScreen != -1) {
-            if (animate) {
-                viewFlipper.setOutAnimation(AnimationUtils.loadAnimation(activity, anim_push_right_out));
-                viewFlipper.setInAnimation(AnimationUtils.loadAnimation(activity, anim_push_right_in));
-            } else {
-                viewFlipper.setOutAnimation(AnimationUtils.loadAnimation(activity, anim_fade_out));
-                viewFlipper.setInAnimation(AnimationUtils.loadAnimation(activity, anim_fade_in));
-            }
-
-            if (indexOfScreen - 1 > 0) {
-                Screen screenBelow = screens.get(indexOfScreen - 1);
-                if (screen.isTopScreen() && !wait) {
-                    screenBelow.update();
-                }
-                if (screenBelow.onForcePortraitOrientation()) {
-                    activity.setOrientationToPortrait();
-                }
-            }
-            viewFlipper.showPrevious();
-            viewFlipper.removeView(screen.view);
-            screens.remove(screen);
-        }
-    }
-
-    public synchronized static void popAllButTop() {
-        while (screens.size() > 1) {
-            Screen scrn = screens.get(0);
-            // popScreen() itself will modify the screens object and remove the first popped screen from itself.
-            popScreen(scrn, false, false);
-        }
-    }
-
-    public synchronized static Screen getTopScreen() {
-        return screens.size() == 0 ? null : screens.get(screens.size() - 1);
-    }
-
-    public static void popTopScreen() {
-        popTopScreen(true, false);
+    static Screen getTopScreen() {
+        return topNavigation.getTopScreen();
     }
 
     public static View inflate(int layout) {
@@ -233,7 +99,7 @@ public class Application {
                         .setCancelable(false)
                         .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
-                                getTopScreen().onCancelBusy();
+                                topNavigation.getTopScreen().onCancelBusy();
                                 busyDialog.dismiss();
                             }
                         })
@@ -328,5 +194,21 @@ public class Application {
         }
 
         return id;
+    }
+
+    public static String pullScreenAnalytics() {
+        StringBuffer analytics = new StringBuffer();
+        for (Navigation nav : navigationList) {
+            analytics.append(nav.pullScreenAnalytics()).append("&");
+        }
+        return analytics.toString();
+    }
+
+    static void onBackPressed() {
+        if (topNavigation.screenCount() == 1) {
+            activity.finish();
+        } else {
+            topNavigation.popTopScreen();
+        }
     }
 }

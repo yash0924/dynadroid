@@ -81,47 +81,6 @@ public abstract class Screen {
         return activity.isOrientationLandscape();
     }
 
-    public Screen pushAndWait() {
-        Application.pushScreen(this, true);
-        return this;
-    }
-
-    public Screen push() {
-        Application.pushScreen(this, false);
-        return this;
-    }
-
-    public Screen push(boolean animate) {
-        Application.pushScreen(this, animate, false);
-        return this;
-    }
-
-    public Screen swapAndWait() {
-        Application.swapScreen(this, true);
-        return this;
-    }
-
-    public Screen swap() {
-        Application.swapScreen(this, false);
-        return this;
-    }
-
-    public void pop() {
-        Application.popScreen(this, true, false);
-    }
-
-    public void popAndWait() {
-        Application.popScreen(this, true, true);
-    }
-
-    public void pop(boolean animate) {
-        Application.popScreen(this, animate, false);
-    }
-
-    public void popAndWait(boolean animate) {
-        Application.popScreen(this, animate, true);
-    }
-
     public boolean isTopScreen() {
         return Application.getTopScreen() == this;
     }
