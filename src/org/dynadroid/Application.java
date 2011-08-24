@@ -13,7 +13,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.animation.AnimationUtils;
 import android.widget.ViewFlipper;
-import org.dynadroid.samples.helloworld.R;
 import org.dynadroid.utils.Debug;
 import org.dynadroid.utils.Inflector;
 import org.dynadroid.utils.StringUtils;
@@ -32,14 +31,27 @@ public class Application {
     protected static ProgressDialog busyDialog;
     static List<String> trackedScreensMap;
     static List<Integer> trackedScreens;
+    
+    static int layout_application, id_flipper, id_application, anim_push_left_out, anim_push_left_in, anim_push_right_out, anim_push_right_in, anim_fade_out, anim_fade_in, style_busy;
 
     public synchronized static void init(DynaDroidActivity dynaDroidActivity) {
-        screens = new ArrayList();
         activity = dynaDroidActivity;
+        layout_application = getResourceIdByName("layout","application");
+        id_flipper = getResourceIdByName("id","flipper");
+        id_application = getResourceIdByName("id","application");
+        anim_push_left_out = getResourceIdByName("anim","push_left_out");
+        anim_push_left_in = getResourceIdByName("anim","push_left_in");
+        anim_push_right_out = getResourceIdByName("anim","push_right_out");
+        anim_push_right_in = getResourceIdByName("anim","push_right_in");
+        anim_fade_out = getResourceIdByName("anim","fade_out");
+        anim_fade_in = getResourceIdByName("anim","fade_in");
+        style_busy = getResourceIdByName("style","busy");
+        dynaDroidActivity.setContentView(layout_application);
+        screens = new ArrayList();
         Screen.setActivity(dynaDroidActivity);
-        viewFlipper = (ViewFlipper) activity.findViewById(R.id.flipper);
+        viewFlipper = (ViewFlipper) activity.findViewById(id_flipper);
         Debug.println("******viewF=" + viewFlipper);
-        applicationView = activity.findViewById(R.id.application);
+        applicationView = activity.findViewById(id_application);
         trackedScreensMap = new ArrayList();
         trackedScreens = new ArrayList();
     }
@@ -71,12 +83,12 @@ public class Application {
             }
             viewFlipper.addView(screen.getView(), screens.size());
             if (animate) {
-                viewFlipper.setOutAnimation(AnimationUtils.loadAnimation(activity, R.anim.push_left_out));
-                viewFlipper.setInAnimation(AnimationUtils.loadAnimation(activity, R.anim.push_left_in));
+                viewFlipper.setOutAnimation(AnimationUtils.loadAnimation(activity, anim_push_left_out));
+                viewFlipper.setInAnimation(AnimationUtils.loadAnimation(activity, anim_push_left_in));
             } else {
                 Debug.println("no animation");
-                viewFlipper.setOutAnimation(AnimationUtils.loadAnimation(activity, R.anim.fade_out));
-                viewFlipper.setInAnimation(AnimationUtils.loadAnimation(activity, R.anim.fade_in));
+                viewFlipper.setOutAnimation(AnimationUtils.loadAnimation(activity, anim_fade_out));
+                viewFlipper.setInAnimation(AnimationUtils.loadAnimation(activity, anim_fade_in));
             }
             if (!wait) {
                 screen.update();
@@ -101,7 +113,7 @@ public class Application {
     }
 
     synchronized static String pullScreenAnalytics() {
-        String analytics = "screens="+ StringUtils.join(trackedScreens,",") + "&map=" + StringUtils.join(trackedScreensMap, ",");
+        String analytics = "screens=" + StringUtils.join(trackedScreens, ",") + "&map=" + StringUtils.join(trackedScreensMap, ",");
         trackedScreens = new ArrayList();
         trackedScreensMap = new ArrayList();
         return analytics;
@@ -139,11 +151,11 @@ public class Application {
         int indexOfScreen = screens.indexOf(screen);
         if (indexOfScreen != -1) {
             if (animate) {
-                viewFlipper.setOutAnimation(AnimationUtils.loadAnimation(activity, R.anim.push_right_out));
-                viewFlipper.setInAnimation(AnimationUtils.loadAnimation(activity, R.anim.push_right_in));
+                viewFlipper.setOutAnimation(AnimationUtils.loadAnimation(activity, anim_push_right_out));
+                viewFlipper.setInAnimation(AnimationUtils.loadAnimation(activity, anim_push_right_in));
             } else {
-                viewFlipper.setOutAnimation(AnimationUtils.loadAnimation(activity, R.anim.fade_out));
-                viewFlipper.setInAnimation(AnimationUtils.loadAnimation(activity, R.anim.fade_in));
+                viewFlipper.setOutAnimation(AnimationUtils.loadAnimation(activity, anim_fade_out));
+                viewFlipper.setInAnimation(AnimationUtils.loadAnimation(activity, anim_fade_in));
             }
 
             if (indexOfScreen - 1 > 0) {
@@ -204,7 +216,7 @@ public class Application {
         if (busyDialog != null && busyDialog.isShowing()) {
             return;
         }
-        busyDialog = new ProgressDialog(activity, R.style.busy) {
+        busyDialog = new ProgressDialog(activity, style_busy) {
             @Override
             public boolean onKeyDown(int keyCode, KeyEvent event) {
                 if (keyCode == KeyEvent.KEYCODE_BACK) {
@@ -259,14 +271,7 @@ public class Application {
             int endIndex = className.indexOf("Screen");
             if (endIndex != -1) {
                 String layoutName = Inflector.underscore(className.substring(0, endIndex));
-                try {
-                    Field field = R.layout.class.getField(layoutName);
-                    return inflate(field.getInt(null));
-                } catch (NoSuchFieldException e) {
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
+                return inflate(getResourceIdByName("layout",layoutName));
             }
         } while ((clazz = clazz.getSuperclass()) != null);
         return view;
@@ -290,5 +295,38 @@ public class Application {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setData(Uri.parse(url));
         Application.activity.startActivity(intent);
+    }
+
+    public static int getResourceIdByName(String className, String name) {
+        Class r = null;
+        int id = 0;
+        try {
+            r = Class.forName(activity.getPackageName() + ".R");
+
+            Class[] classes = r.getClasses();
+            Class desireClass = null;
+
+            for (int i = 0; i < classes.length; i++) {
+                if (classes[i].getName().split("\\$")[1].equals(className)) {
+                    desireClass = classes[i];
+                    break;
+                }
+            }
+            if (desireClass != null) {
+                id = desireClass.getField(name).getInt(desireClass);
+            }
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        } catch (SecurityException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        }
+
+        return id;
     }
 }
