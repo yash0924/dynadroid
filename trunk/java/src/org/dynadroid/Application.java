@@ -34,6 +34,7 @@ public class Application {
 
     public synchronized static void init(DynaDroidActivity dynaDroidActivity) {
         activity = dynaDroidActivity;
+        navigationList = new ArrayList<Navigation>();
         layout_application = getResourceIdByName("layout","application");
         id_application = getResourceIdByName("id","application");
         style_busy = getResourceIdByName("style","busy");
